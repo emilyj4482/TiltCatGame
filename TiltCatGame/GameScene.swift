@@ -13,8 +13,7 @@ class GameScene: SKScene {
     private let motionManager = CMMotionManager()
     
     private let backgroundNode = SKSpriteNode(imageNamed: Assets.background.rawValue)
-    private let houseNode = SKSpriteNode(imageNamed: Assets.house.rawValue)
-    
+    private var itemNode: SKSpriteNode!
     private var catFaceNode: SKSpriteNode!
     
     override func didMove(to view: SKView) {
@@ -22,7 +21,7 @@ class GameScene: SKScene {
         
         setupFramePhysics()
         addBackgroundNode()
-        addHouseNode()
+        addItemNode()
         addCatFaceNode()
         
         physicsWorld.contactDelegate = self
@@ -49,17 +48,20 @@ class GameScene: SKScene {
         addChild(backgroundNode)
     }
     
-    private func addHouseNode() {
-        houseNode.size = CGSize(width: 70, height: 70)
-        houseNode.position = CGPoint(x: frame.midX, y: size.height * 0.32)
+    private func addItemNode() {
+        let imageName = Item.allCases.randomElement()?.rawValue ?? Item.tuna.rawValue
+        itemNode = SKSpriteNode(imageNamed: imageName)
         
-        houseNode.physicsBody = SKPhysicsBody(texture: SKTexture(imageNamed: Assets.house.rawValue), size: houseNode.size)
-        houseNode.physicsBody?.categoryBitMask = PhysicsCategory.house
-        houseNode.physicsBody?.collisionBitMask = PhysicsCategory.none
-        houseNode.physicsBody?.contactTestBitMask = PhysicsCategory.cat
-        houseNode.physicsBody?.isDynamic = false
+        itemNode.size = CGSize(width: 70, height: 70)
+        itemNode.position = CGPoint(x: frame.midX, y: size.height * 0.32)
         
-        addChild(houseNode)
+        itemNode.physicsBody = SKPhysicsBody(texture: SKTexture(imageNamed: imageName), size: itemNode.size)
+        itemNode.physicsBody?.categoryBitMask = PhysicsCategory.item
+        itemNode.physicsBody?.collisionBitMask = PhysicsCategory.none
+        itemNode.physicsBody?.contactTestBitMask = PhysicsCategory.cat
+        itemNode.physicsBody?.isDynamic = false
+        
+        addChild(itemNode)
     }
     
     private func addCatFaceNode() {
@@ -72,7 +74,7 @@ class GameScene: SKScene {
         catFaceNode.physicsBody = SKPhysicsBody(texture: SKTexture(imageNamed: imageName), size: catFaceNode.size)
         catFaceNode.physicsBody?.categoryBitMask = PhysicsCategory.cat
         catFaceNode.physicsBody?.collisionBitMask = PhysicsCategory.frame
-        catFaceNode.physicsBody?.contactTestBitMask = PhysicsCategory.house
+        catFaceNode.physicsBody?.contactTestBitMask = PhysicsCategory.item
         catFaceNode.physicsBody?.isDynamic = true
         catFaceNode.physicsBody?.affectedByGravity = false
         catFaceNode.physicsBody?.allowsRotation = false
@@ -140,26 +142,23 @@ extension GameScene: SKPhysicsContactDelegate {
         let bodyA = contact.bodyA
         let bodyB = contact.bodyB
         
-        // check if cat and house collided and we're not already processing a contact
         if !isContactProcessing &&
-            ((bodyA.categoryBitMask == PhysicsCategory.cat && bodyB.categoryBitMask == PhysicsCategory.house) ||
-             (bodyA.categoryBitMask == PhysicsCategory.house && bodyB.categoryBitMask == PhysicsCategory.cat)) {
+            ((bodyA.categoryBitMask == PhysicsCategory.cat && bodyB.categoryBitMask == PhysicsCategory.item) ||
+             (bodyA.categoryBitMask == PhysicsCategory.item && bodyB.categoryBitMask == PhysicsCategory.cat)) {
             isContactProcessing = true
-            moveHouseToRandomPosition()
+            repositionItemNode()
         }
     }
     
-    private func moveHouseToRandomPosition() {
-        let margin: CGFloat = 50
+    private func repositionItemNode() {
+        let randomX = CGFloat.random(in: 50...(size.width - 50))
+        let randomY = CGFloat.random(in: 100...(size.height - 100))
         
-        let randomX = CGFloat.random(in: margin...(size.width - margin))
-        let randomY = CGFloat.random(in: margin...(size.height - margin))
+        let originalPhysicsBody = itemNode.physicsBody
+        itemNode.physicsBody = nil
         
-        let originalPhysicsBody = houseNode.physicsBody
-        houseNode.physicsBody = nil
-        
-        houseNode.position = CGPoint(x: randomX, y: randomY)
-        houseNode.physicsBody = originalPhysicsBody
+        itemNode.position = CGPoint(x: randomX, y: randomY)
+        itemNode.physicsBody = originalPhysicsBody
         
         isContactProcessing = false
     }
