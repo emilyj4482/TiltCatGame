@@ -82,6 +82,8 @@ class GameScene: SKScene {
         
         addChild(catFaceNode)
     }
+    
+    private var isContactProcessing = false
 }
 
 extension GameScene: SKPhysicsContactDelegate {
@@ -132,5 +134,33 @@ extension GameScene: SKPhysicsContactDelegate {
     
     private func stopDeviceMotionUpdates() {
         motionManager.stopDeviceMotionUpdates()
+    }
+    
+    func didBegin(_ contact: SKPhysicsContact) {
+        let bodyA = contact.bodyA
+        let bodyB = contact.bodyB
+        
+        // check if cat and house collided and we're not already processing a contact
+        if !isContactProcessing &&
+            ((bodyA.categoryBitMask == PhysicsCategory.cat && bodyB.categoryBitMask == PhysicsCategory.house) ||
+             (bodyA.categoryBitMask == PhysicsCategory.house && bodyB.categoryBitMask == PhysicsCategory.cat)) {
+            isContactProcessing = true
+            moveHouseToRandomPosition()
+        }
+    }
+    
+    private func moveHouseToRandomPosition() {
+        let margin: CGFloat = 50
+        
+        let randomX = CGFloat.random(in: margin...(size.width - margin))
+        let randomY = CGFloat.random(in: margin...(size.height - margin))
+        
+        let originalPhysicsBody = houseNode.physicsBody
+        houseNode.physicsBody = nil
+        
+        houseNode.position = CGPoint(x: randomX, y: randomY)
+        houseNode.physicsBody = originalPhysicsBody
+        
+        isContactProcessing = false
     }
 }
