@@ -8,6 +8,7 @@
 import Foundation
 
 enum Item: String, CaseIterable {
+    case churu
     case tuna
     case mouse
     case fish
