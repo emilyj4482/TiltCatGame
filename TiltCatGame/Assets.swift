@@ -9,5 +9,5 @@ import Foundation
 
 enum Assets: String {
     case background
-    case house
+    case meow       // https://pixabay.com/ko/sound-effects/cat-meow-8-fx-306184/
 }
