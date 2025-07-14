@@ -55,13 +55,17 @@ class GameScene: SKScene {
         itemNode.size = CGSize(width: 70, height: 70)
         itemNode.position = CGPoint(x: frame.midX, y: size.height * 0.32)
         
-        itemNode.physicsBody = SKPhysicsBody(texture: SKTexture(imageNamed: imageName), size: itemNode.size)
+        setupItemPhysicsBody()
+        
+        addChild(itemNode)
+    }
+    
+    private func setupItemPhysicsBody() {
+        itemNode.physicsBody = SKPhysicsBody(circleOfRadius: itemNode.size.width * 0.4)
         itemNode.physicsBody?.categoryBitMask = PhysicsCategory.item
         itemNode.physicsBody?.collisionBitMask = PhysicsCategory.none
         itemNode.physicsBody?.contactTestBitMask = PhysicsCategory.cat
         itemNode.physicsBody?.isDynamic = false
-        
-        addChild(itemNode)
     }
     
     private func addCatFaceNode() {
@@ -71,6 +75,12 @@ class GameScene: SKScene {
         catFaceNode.size = CGSize(width: 60, height: 60)
         catFaceNode.position = CGPoint(x: frame.midX, y: frame.midY)
         
+        setupCatFacePhysicsBody(imageName)
+        
+        addChild(catFaceNode)
+    }
+    
+    private func setupCatFacePhysicsBody(_ imageName: String) {
         catFaceNode.physicsBody = SKPhysicsBody(texture: SKTexture(imageNamed: imageName), size: catFaceNode.size)
         catFaceNode.physicsBody?.categoryBitMask = PhysicsCategory.cat
         catFaceNode.physicsBody?.collisionBitMask = PhysicsCategory.frame
@@ -81,8 +91,16 @@ class GameScene: SKScene {
         catFaceNode.physicsBody?.restitution = 0.0
         catFaceNode.physicsBody?.linearDamping = 0.7    // Essential for natural movement
         catFaceNode.physicsBody?.angularDamping = 0.9   // Prevent unwanted rotation
-        
-        addChild(catFaceNode)
+    }
+    
+    private func changeCatFaceImage() {
+        let imageName = Cat.allCases.randomElement()?.rawValue ?? Cat.cheese.rawValue
+        catFaceNode.texture = SKTexture(imageNamed: imageName)
+    }
+    
+    private func changeItemImage() {
+        let imageName = Item.allCases.randomElement()?.rawValue ?? Item.tuna.rawValue
+        itemNode.texture = SKTexture(imageNamed: imageName)
     }
     
     private var isContactProcessing = false
@@ -147,6 +165,8 @@ extension GameScene: SKPhysicsContactDelegate {
              (bodyA.categoryBitMask == PhysicsCategory.item && bodyB.categoryBitMask == PhysicsCategory.cat)) {
             isContactProcessing = true
             repositionItemNode()
+            changeItemImage()
+            changeCatFaceImage()
         }
     }
     
