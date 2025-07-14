@@ -16,6 +16,15 @@ class GameScene: SKScene {
     private var itemNode: SKSpriteNode!
     private var catFaceNode: SKSpriteNode!
     
+    private let meowSound: SKAudioNode = {
+        let node = SKAudioNode(fileNamed: Assets.meow.rawValue)
+        
+        node.isPositional = true
+        node.autoplayLooped = false
+        
+        return node
+    }()
+    
     override func didMove(to view: SKView) {
         size = view.bounds.size
         
@@ -26,6 +35,8 @@ class GameScene: SKScene {
         
         physicsWorld.contactDelegate = self
         startDeviceMotionUpdates()
+        
+        addChild(meowSound)
     }
     
     override func willMove(from view: SKView) {
@@ -157,13 +168,15 @@ extension GameScene: SKPhysicsContactDelegate {
     }
     
     func didBegin(_ contact: SKPhysicsContact) {
+        guard !isContactProcessing else { return }
+        
         let bodyA = contact.bodyA
         let bodyB = contact.bodyB
         
-        if !isContactProcessing &&
-            ((bodyA.categoryBitMask == PhysicsCategory.cat && bodyB.categoryBitMask == PhysicsCategory.item) ||
-             (bodyA.categoryBitMask == PhysicsCategory.item && bodyB.categoryBitMask == PhysicsCategory.cat)) {
+        if ((bodyA.categoryBitMask == PhysicsCategory.cat && bodyB.categoryBitMask == PhysicsCategory.item) ||
+            (bodyA.categoryBitMask == PhysicsCategory.item && bodyB.categoryBitMask == PhysicsCategory.cat)) {
             isContactProcessing = true
+            playMeowSound()
             repositionItemNode()
             changeItemImage()
             changeCatFaceImage()
@@ -180,6 +193,14 @@ extension GameScene: SKPhysicsContactDelegate {
         itemNode.position = CGPoint(x: randomX, y: randomY)
         itemNode.physicsBody = originalPhysicsBody
         
-        isContactProcessing = false
+        // Small delay to prevent multiple contacts from same collision
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.isContactProcessing = false
+        }
+    }
+    
+    private func playMeowSound() {
+        let playAction = SKAction.play()
+        meowSound.run(playAction)
     }
 }
