@@ -16,6 +16,22 @@ class GameScene: SKScene {
     private var itemNode: SKSpriteNode!
     private var catFaceNode: SKSpriteNode!
     
+    private let countLabel: SKLabelNode = {
+        let node = SKLabelNode(text: "0 meow")
+        
+        node.fontColor = .white
+        node.fontName = "HelveticaNeue-Bold"
+        node.fontSize = 27
+        
+        return node
+    }()
+    
+    private var count: Int = 0 {
+        didSet {
+            countLabel.text = "\(count) meow"
+        }
+    }
+    
     private let meowSound: SKAudioNode = {
         let node = SKAudioNode(fileNamed: Assets.meow.rawValue)
         
@@ -30,6 +46,7 @@ class GameScene: SKScene {
         
         setupFramePhysics()
         addBackgroundNode()
+        addCountLabel()
         addItemNode()
         addCatFaceNode()
         
@@ -57,6 +74,12 @@ class GameScene: SKScene {
         backgroundNode.zPosition = -1
         
         addChild(backgroundNode)
+    }
+    
+    private func addCountLabel() {
+        countLabel.position = CGPoint(x: frame.midX, y: size.height - 100)
+        
+        addChild(countLabel)
     }
     
     private func addItemNode() {
@@ -176,6 +199,9 @@ extension GameScene: SKPhysicsContactDelegate {
         if ((bodyA.categoryBitMask == PhysicsCategory.cat && bodyB.categoryBitMask == PhysicsCategory.item) ||
             (bodyA.categoryBitMask == PhysicsCategory.item && bodyB.categoryBitMask == PhysicsCategory.cat)) {
             isContactProcessing = true
+            
+            count += 1
+            
             playMeowSound()
             repositionItemNode()
             changeItemImage()
@@ -185,7 +211,7 @@ extension GameScene: SKPhysicsContactDelegate {
     
     private func repositionItemNode() {
         let randomX = CGFloat.random(in: 50...(size.width - 50))
-        let randomY = CGFloat.random(in: 100...(size.height - 100))
+        let randomY = CGFloat.random(in: 100...(countLabel.position.y - 100))
         
         let originalPhysicsBody = itemNode.physicsBody
         itemNode.physicsBody = nil
