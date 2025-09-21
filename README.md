@@ -1,5 +1,5 @@
 # TiltCatGame (고양이 기울이기 게임)
-기기를 기울여서 고양이에게 먹이를 먹이는 게임입니다.
+기기를 기울여서 고양이에게 먹이를 먹이는 게임입니다. `CoreMotion`과 물리 충돌 처리를 구현한 프로젝트입니다.
 - `SpriteKit`으로 구현
 - [개발과정을 담은 포스팅](https://velog.io/@emilyj4482/Core-Motion-%EA%B3%A0%EC%96%91%EC%9D%B4-%EA%B8%B0%EC%9A%B8%EC%9D%B4%EA%B8%B0-%EA%B2%8C%EC%9E%84)
 
@@ -105,4 +105,27 @@ extension GameScene: SKPhysicsContactDelegate {
 }
 ```
 ## 트러블슈팅
-### ⚠️ 무거운 texture 문제
+### ⚠️ 무거운 texture 물리 바디 문제
+#### ☹️ 문제
+고양이가 먹이를 먹을(고양이 노드와 먹이 노드가 충돌)수록 앱이 심하게 버벅거리는 현상
+
+<img src="https://github.com/user-attachments/assets/c7f1edcc-fda7-481d-80cf-4efab1525839" width=870>
+
+- 충돌이 감지되면 먹이 노드의 이미지가 5가지 중 랜덤 한가지로 변경되고, 랜덤 위치에 리스폰되도록 구현했음
+- 게임이 진행될수록 프레임 드랍이 심해져 플레이가 불가능해짐
+#### 🧐 원인
+1. `texture` 기반 물리 바디 생성의 고비용 연산
+   > `SpriteKit`에서 `SKPhysicsBody(texture: ...)`는 주어진 텍스처의 `alpha` 정보를 기반으로 실제 충돌 영역을 픽셀 단위로 계산하는데, 이 연산은 매우 무겁고 특히 해상도가 높은 이미지일수록 성능 부닥이 급격히 증가
+2. 충돌마다 물리 바디를 반복 생성
+   > 먹이 노드의 이미지를 변경할 때마다 물리 바디를 새로 생성, 교체
+   > 충돌 → 이미지 변경 → 새로운 물리 바디 생성의 과정이 반복 : 프레임마다 반복되는 고비용 연산이 누적되어 앱이 버벅거리게 됨
+#### 😇 해결
+1. `texture` 대신 원 형태의 물리 바디 사용 : 단순 도형은 `SpriteKit` 내부에서 매우 빠르게 계산되므로 성능 부담이 거의 없음
+```swift
+itemNode.physicsBody = SKPhysicsBody(circleOfRadius: itemNode.size.width * 0.4)
+```
+2. 물리 바디 재사용 : 아이템 이미지가 바뀌더라도 물리 바디는 계속해서 원 형태를 유지
+#### 😎 성과
+- `SKPhysicsBody(texture:size:)`가 픽셀 단위로 충돌 영역을 계산하는 매우 무거운 연산임을 이해하게 됨
+- 텍스처가 변경될 때마다 `physicsBody`를 생성하는 방식은 연산량이 충돌 횟수에 비례하여 폭발적으로 증가하므로 성능 저하를 초래한다는 사실을 학습
+- `SKPhysicsBody`의 여러가지 종류에 대해 깊게 학습하는 계기가 됨
