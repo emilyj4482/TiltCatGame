@@ -2,6 +2,7 @@
 기기를 기울여서 고양이에게 먹이를 먹이는 게임입니다. `CoreMotion`과 물리 충돌 처리를 구현한 프로젝트입니다.
 - `SpriteKit`으로 구현
 - [개발과정을 담은 포스팅](https://velog.io/@emilyj4482/Core-Motion-%EA%B3%A0%EC%96%91%EC%9D%B4-%EA%B8%B0%EC%9A%B8%EC%9D%B4%EA%B8%B0-%EA%B2%8C%EC%9E%84)
+- [시연 영상](https://youtube.com/shorts/tq_YnWxeyto?feature=share)
 
 ## 목차
 - [주요 구현내용](#주요-구현내용)
